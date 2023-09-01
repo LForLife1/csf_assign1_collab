@@ -76,7 +76,11 @@ UInt256 uint256_sub(UInt256 left, UInt256 right) {
 // Return the two's-complement negation of the given UInt256 value.
 UInt256 uint256_negate(UInt256 val) {
   UInt256 result;
-  // TODO: implement
+  for (int i = 0; i < 7; i++) //each index of data
+  {
+    result.data[i] = ~val.data[i]; //invert all bits
+  }
+  //TODO:                       // and add one
   return result;
 }
 
