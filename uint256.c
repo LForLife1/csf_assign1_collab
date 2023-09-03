@@ -89,20 +89,14 @@ UInt256 uint256_negate(UInt256 val) {
 // should be shifted back into the least significant bits.
 UInt256 uint256_rotate_left(UInt256 val, unsigned nbits) {
   int u32Shift = nbits / 8;
-  int bitShift = nbits % 8;
+  int bitShift = nbits % 32;
   UInt256 result;
-  printf("\n");
-  for (int i = 0; i < 8; i++) {
-    printf("%d\n", val.data[i]);
-  }
-  printf("\n");
   for (int u32 = 0; u32 < 8; u32++) {
-    int lookupU32 = (u32 + u32Shift) % 8;
-    int lookupU32Overflow = (lookupU32 + 1) % 8;
-    int overflowMask = ~(0xffffffff >> bitShift);
-    result.data[u32] = val.data[lookupU32] << bitShift;
-    result.data[u32] &= overflowMask & (val.data[lookupU32Overflow] << bitShift);
-    printf("%d\n", result.data[u32]);
+    int lookupU32 = (u32 - u32Shift + 8) % 8;
+    int lookupU32Overflow = (lookupU32 - 1 + 8) % 8;
+    int mask = 0xffffffff >> bitShift;
+    result.data[u32] = (val.data[lookupU32] & mask) << bitShift;
+    result.data[u32] |= (val.data[lookupU32Overflow] & ~mask) >> (32 - bitShift);
   }
   return result;
 }
@@ -111,25 +105,15 @@ UInt256 uint256_rotate_left(UInt256 val, unsigned nbits) {
 // the right. Any bits shifted past the least significant bit
 // should be shifted back into the most significant bits.
 UInt256 uint256_rotate_right(UInt256 val, unsigned nbits) {
-  int u32Shift = (nbits / 8) % 8; // no point in going past 8, then loops
-  int bitShift = nbits % 8;
+  int u32Shift = nbits / 8;
+  int bitShift = nbits % 32;
   UInt256 result;
-  printf("\n");
-  for (int i = 0; i < 8; i++) {
-    printf("%d\n", val.data[i]);
-  }
-  printf("\n");
   for (int u32 = 0; u32 < 8; u32++) {
-    uint32_t dataBlock = 0;
-    int lookupU32 = (u32 + 8 - u32Shift) % 8; // add 8 to avoid negative before modulo
-    int lookupU32Overflow = (lookupU32 + 8 - 1) % 8; // add 8 to avoid negative before modulo
-    int overflowMask = ~(0xffffffff << bitShift);
-    for (int bit = 0; bit < 32; bit++) {
-      int lookupDataBlock = ((u32 + 8 - u32Shift) + (bit - bitShift) / 32) % 8;
-      dataBlock &= 1 & (val.data[lookupDataBlock] >> (bit - bitShift));
-    }
-    result.data[u32] = dataBlock;
-    printf("%d\n", result.data[u32]);
+    int lookupU32 = (u32 + u32Shift) % 8;
+    int lookupU32Overflow = (lookupU32 + 1) % 8;
+    int mask = 0xffffffff << bitShift;
+    result.data[u32] = (val.data[lookupU32] & mask) >> bitShift;
+    result.data[u32] |= (val.data[lookupU32Overflow] & ~mask) << (32 - bitShift);
   }
   return result;
 }
