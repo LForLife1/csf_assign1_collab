@@ -6,4 +6,5 @@ uint256_create, while Trevor did uint256_get_bits.
 
 
 Milestone 2: We again started by discussing how each function should be implemented. Then, Trevor did
-uint256_rotate_left and uint256_rotate_right.
+uint256_rotate_left and uint256_rotate_right. Liam worked on add negate and subtract, and then we worked
+together on create and format hex together.

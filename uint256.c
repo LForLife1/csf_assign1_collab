@@ -79,7 +79,7 @@ UInt256 uint256_add(UInt256 left, UInt256 right) {
 // Compute the difference of two UInt256 values.
 UInt256 uint256_sub(UInt256 left, UInt256 right) {
   UInt256 result;
-  // TODO: implement
+  result =  uint256_add(left, uint256_negate(right));
   return result;
 }
 
@@ -87,9 +87,9 @@ UInt256 uint256_sub(UInt256 left, UInt256 right) {
 UInt256 uint256_negate(UInt256 val) {
   UInt256 result;
   UInt256 one = uint256_create_from_u32(1);
-  for (int i = 0; i < 7; i++) //each index of data
+  for (int i = 0; i <= 7; i++) //each index of data
   {
-    result.data[i] = ~val.data[i]; //invert all bits
+    result.data[i] = ~(val.data[i]); //invert all bits
   }
   result = uint256_add(result, one);
   return result;
