@@ -62,9 +62,19 @@ uint32_t uint256_get_bits(UInt256 val, unsigned index) {
 // Compute the sum of two UInt256 values.
 UInt256 uint256_add(UInt256 left, UInt256 right) {
   UInt256 sum;
-  // TODO: implement
+  uint64_t tempSum = 0U;
+  uint32_t overflow = 0U;
+
+  for (int i = 0; i <= 7; i++)
+  {
+    tempSum = (uint64_t) left.data[i] + right.data[i] + overflow;
+    sum.data[i] = (uint32_t) tempSum & ~(~0U << 32);  //bottom 32 bits
+    tempSum >>= 32;           //shift top 32 bits down to bottom
+    overflow = (uint32_t) tempSum & ~(~0U << 32);     //top 32 bits (now bottom)
+  }
   return sum;
 }
+
 
 // Compute the difference of two UInt256 values.
 UInt256 uint256_sub(UInt256 left, UInt256 right) {
@@ -76,11 +86,12 @@ UInt256 uint256_sub(UInt256 left, UInt256 right) {
 // Return the two's-complement negation of the given UInt256 value.
 UInt256 uint256_negate(UInt256 val) {
   UInt256 result;
+  UInt256 one = uint256_create_from_u32(1);
   for (int i = 0; i < 7; i++) //each index of data
   {
     result.data[i] = ~val.data[i]; //invert all bits
   }
-  //TODO:                       // and add one
+  result = uint256_add(result, one);
   return result;
 }
 
