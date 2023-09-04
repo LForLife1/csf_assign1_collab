@@ -1,1 +1,9 @@
-TODO: add information about contributions of team member(s)
+Computer System Fundamentals - Liam Finn and Trevor Black
+
+Milestone 1: We met outside of class and discussed how we would implement the three functions, 
+and then outside of class we split the workload. Liam did uint256_create_from_u32 and 
+uint256_create, while Trevor did uint256_get_bits.
+
+
+Milestone 2: We again started by discussing how each function should be implemented. Then, Trevor did
+uint256_rotate_left and uint256_rotate_right.
