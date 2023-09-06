@@ -33,23 +33,19 @@ UInt256 uint256_create(const uint32_t data[8]) {
 UInt256 uint256_create_from_hex(const char *hex) {
   UInt256 result;
   // start at end of the string (not including null terminator) - so read right to left
-  char *currentHex = hex;
+  const char * currentHex = hex;
   while (*(currentHex + 1) != '\0') {
     currentHex++;
   }
   // scan 64 characters max (or until reaches start of string)
   char *buffer = malloc(sizeof(char) * 9);
   for (int i = 0; i < 8; i++) {
-    buffer = "xxxxxxxx"; // reset to invalid hex characters
-    printf("buffer:%s", buffer);
+    strcpy(buffer, "xxxxxxxx"); // reset to invalid hex characters
     for (int j = 0; j < 8 && currentHex != hex-1; j++, currentHex--) {
-      printf("\n prechar:%c", buffer[j]);
-      buffer[j] = 'a';
-      printf("\n char:%c", *currentHex);
+      buffer[j] = *currentHex;
     }
 
     result.data[i] = strtoul(buffer, NULL, 16);
-    printf("%d", result.data[i]);
   }
   free(buffer);
   return result;
