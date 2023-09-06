@@ -76,9 +76,9 @@ UInt256 uint256_add(UInt256 left, UInt256 right) {
   for (int i = 0; i <= 7; i++)
   {
     tempSum = (uint64_t) left.data[i] + right.data[i] + overflow;
-    sum.data[i] = (uint32_t) tempSum & ~(~0U << 32);  //bottom 32 bits
-    tempSum >>= 32;           //shift top 32 bits down to bottom
-    overflow = (uint32_t) tempSum & ~(~0U << 32);     //top 32 bits (now bottom)
+    sum.data[i] = (uint32_t) tempSum;  //bottom 32 bits
+    tempSum >>= 32;                    //shift top 32 bits down to bottom
+    overflow = (uint32_t) tempSum;     //top 32 bits (now bottom)
   }
   return sum;
 }
@@ -95,9 +95,9 @@ UInt256 uint256_sub(UInt256 left, UInt256 right) {
 UInt256 uint256_negate(UInt256 val) {
   UInt256 result;
   UInt256 one = uint256_create_from_u32(1);
-  for (int i = 0; i <= 7; i++) //each index of data
+  for (int i = 0; i <= 7; i++)        //each index of data
   {
-    result.data[i] = ~(val.data[i]); //invert all bits
+    result.data[i] = ~(val.data[i]);  //invert all bits
   }
   result = uint256_add(result, one);
   return result;
