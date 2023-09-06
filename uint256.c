@@ -32,15 +32,27 @@ UInt256 uint256_create(const uint32_t data[8]) {
 // Create a UInt256 value from a string of hexadecimal digits.
 UInt256 uint256_create_from_hex(const char *hex) {
   UInt256 result;
-  int index = strlen(hex) - 1;
-  // uint32_t hexNum;
-  // for (int i = 0; i <= 7; i++) 
-  // {
-  //   const char *buffer = hex;
-  //   hexNum = strtoul (buffer, NULL, 16);
-  //   result.data[i] = hexNum;
-  // }
-    return result;
+  // start at end of the string (not including null terminator) - so read right to left
+  char *currentHex = hex;
+  while (*(currentHex + 1) != '\0') {
+    currentHex++;
+  }
+  // scan 64 characters max (or until reaches start of string)
+  char *buffer = malloc(sizeof(char) * 9);
+  for (int i = 0; i < 8; i++) {
+    buffer = "xxxxxxxx"; // reset to invalid hex characters
+    printf("buffer:%s", buffer);
+    for (int j = 0; j < 8 && currentHex != hex-1; j++, currentHex--) {
+      printf("\n prechar:%c", buffer[j]);
+      buffer[j] = 'a';
+      printf("\n char:%c", *currentHex);
+    }
+
+    result.data[i] = strtoul(buffer, NULL, 16);
+    printf("%d", result.data[i]);
+  }
+  free(buffer);
+  return result;
 }
 
 // Return a dynamically-allocated string of hex digits representing the
