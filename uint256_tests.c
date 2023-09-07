@@ -44,6 +44,8 @@ void test_create(TestObjs *objs);
 void test_create_from_hex(TestObjs *objs);
 void test_format_as_hex(TestObjs *objs);
 void test_add(TestObjs *objs);
+void test_add_genfact();
+void test_add_genfact2();
 void test_sub(TestObjs *objs);
 void test_negate(TestObjs *objs);
 void test_rotate_left(TestObjs *objs);
@@ -62,6 +64,8 @@ int main(int argc, char **argv) {
   TEST(test_create_from_hex);
   TEST(test_format_as_hex);
   TEST(test_add);
+  TEST(test_add_genfact);
+  TEST(test_add_genfact2);
   TEST(test_sub);
   TEST(test_negate);
   TEST(test_rotate_left);
@@ -185,21 +189,99 @@ void test_format_as_hex(TestObjs *objs) {
 void test_add(TestObjs *objs) {
   UInt256 result;
 
-  result = uint256_add(objs->zero, objs->zero);
+  result = uint256_add(objs->zero, objs->zero);  // 0 + 0 (zeroes)
   ASSERT_SAME(objs->zero, result);
 
-  result = uint256_add(objs->zero, objs->one);
+  result = uint256_add(objs->zero, objs->one);   // 0 + 1
+  ASSERT_SAME(objs->one, result);
+
+  result = uint256_add(objs->one, objs->zero);   // 1 + 0 (commutative)
   ASSERT_SAME(objs->one, result);
 
   uint32_t two_data[8] = { 2U };
   UInt256 two;
   INIT_FROM_ARR(two, two_data);
-  result = uint256_add(objs->one, objs->one);
+  result = uint256_add(objs->one, objs->one);    // 1 + 1 (symmetrical non-zero)
   ASSERT_SAME(two, result);
 
-  result = uint256_add(objs->max, objs->one);
+  result = uint256_add(objs->zero, objs->max);   // 0 + MAX
+  ASSERT_SAME(objs->max, result);
+
+  result = uint256_add(objs->max, objs->one);    // MAX + 1 = 0
   ASSERT_SAME(objs->zero, result);
+
+  result = uint256_add(objs->one, objs->max);    // MAX + 1 = 0 (commutative overflow)
+  ASSERT_SAME(objs->zero, result);
+
+  result = uint256_add(objs->max, two);          // MAX + 2 = 1
+  ASSERT_SAME(objs->one, result);
+
+  UInt256 one_below_max;
+  set_all(&one_below_max, 0xFFFFFFFFU);
+  one_below_max.data[0] = 0xFFFFFFFEU;
+  result = uint256_add(objs->max, objs->max);    // MAX + MAX = MAX - 1
+  ASSERT_SAME(one_below_max, result);
 }
+
+void test_add_genfact() {          //used genfact addition fact
+  UInt256 left, right, result;
+  left.data[0] = 0xe1a96ad2U;
+  left.data[1] = 0xe6499b1eU;
+  left.data[2] = 0x136e9ef3U;
+  left.data[3] = 0x03d900deU;
+  left.data[4] = 0x3d4e8c93U;
+  left.data[5] = 0x2a98dab1U;
+  left.data[6] = 0xb0d2941dU;
+  left.data[7] = 0x0ec8a915U;
+  right.data[0] = 0xc4337d6dU;
+  right.data[1] = 0x954bb345U;
+  right.data[2] = 0x8b33686fU;
+  right.data[3] = 0x2ac4e8aeU;
+  right.data[4] = 0x132e93dfU;
+  right.data[5] = 0x8f6f05d8U;
+  right.data[6] = 0x9c92d508U;
+  right.data[7] = 0x02531c80U;
+  result = uint256_add(left, right);
+  ASSERT(0xa5dce83fU == result.data[0]);
+  ASSERT(0x7b954e64U == result.data[1]);
+  ASSERT(0x9ea20763U == result.data[2]);
+  ASSERT(0x2e9de98cU == result.data[3]);
+  ASSERT(0x507d2072U == result.data[4]);
+  ASSERT(0xba07e089U == result.data[5]);
+  ASSERT(0x4d656925U == result.data[6]);
+  ASSERT(0x111bc596U == result.data[7]);
+}
+
+void test_add_genfact2() {
+  UInt256 left, right, result;
+  left.data[0] = 0xbd3f2275U;
+  left.data[1] = 0xdaade3feU;
+  left.data[2] = 0x8f8991d5U;
+  left.data[3] = 0x4b5feaa9U;
+  left.data[4] = 0x19448805U;
+  left.data[5] = 0x525c1526U;
+  left.data[6] = 0x4719744bU;
+  left.data[7] = 0x50a3b0bcU;
+  right.data[0] = 0x90066acbU;
+  right.data[1] = 0xf3e33d14U;
+  right.data[2] = 0x39edfa60U;
+  right.data[3] = 0xb3da172dU;
+  right.data[4] = 0x2b92cedeU;
+  right.data[5] = 0x2594beccU;
+  right.data[6] = 0x0d571731U;
+  right.data[7] = 0x996fc7bdU;
+  result = uint256_add(left, right);
+  ASSERT(0x4d458d40U == result.data[0]);
+  ASSERT(0xce912113U == result.data[1]);
+  ASSERT(0xc9778c36U == result.data[2]);
+  ASSERT(0xff3a01d6U == result.data[3]);
+  ASSERT(0x44d756e3U == result.data[4]);
+  ASSERT(0x77f0d3f2U == result.data[5]);
+  ASSERT(0x54708b7cU == result.data[6]);
+  ASSERT(0xea137879U == result.data[7]);
+
+}
+
 
 void test_sub(TestObjs *objs) {
   UInt256 result;
