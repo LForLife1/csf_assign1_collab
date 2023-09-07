@@ -163,6 +163,17 @@ void test_create(TestObjs *objs) {
   ASSERT(6U == val1.data[5]);
   ASSERT(7U == val1.data[6]);
   ASSERT(8U == val1.data[7]);
+
+  uint32_t zerosdata[8] = { 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U };
+  UInt256 val2 = uint256_create(zerosdata);
+  ASSERT(0U == val2.data[0]);
+  ASSERT(0U == val2.data[1]);
+  ASSERT(0U == val2.data[2]);
+  ASSERT(0U == val2.data[3]);
+  ASSERT(0U == val2.data[4]);
+  ASSERT(0U == val2.data[5]);
+  ASSERT(0U == val2.data[6]);
+  ASSERT(0U == val2.data[7]);
 }
 
 void test_create_from_hex(TestObjs *objs) {
