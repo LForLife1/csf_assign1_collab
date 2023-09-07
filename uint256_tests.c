@@ -8,6 +8,7 @@ typedef struct {
   UInt256 zero; // the value equal to 0
   UInt256 one;  // the value equal to 1
   UInt256 max;  // the value equal to (2^256)-1
+  UInt256 one_below_max; //the value equal to (2^256) - 2
   UInt256 msb_set; // the value equal to 2^255
   UInt256 rot; // value used to test rotations
 } TestObjs;
@@ -47,6 +48,7 @@ void test_add(TestObjs *objs);
 void test_add_genfact();
 void test_add_genfact2();
 void test_sub(TestObjs *objs);
+void test_subtract_genfact();
 void test_negate(TestObjs *objs);
 void test_rotate_left(TestObjs *objs);
 void test_rotate_right(TestObjs *objs);
@@ -67,6 +69,7 @@ int main(int argc, char **argv) {
   TEST(test_add_genfact);
   TEST(test_add_genfact2);
   TEST(test_sub);
+  TEST(test_subtract_genfact);
   TEST(test_negate);
   TEST(test_rotate_left);
   TEST(test_rotate_right);
@@ -89,6 +92,9 @@ TestObjs *setup(void) {
   set_all(&objs->one, 0);
   objs->one.data[0] = 1U;
   set_all(&objs->max, 0xFFFFFFFFU);
+
+  set_all(&objs->one_below_max, 0xFFFFFFFFU);
+  objs->one_below_max.data[0] = 0xFFFFFFFEU;
 
   // create a value with only the most-significant bit set
   uint32_t msb_set_data[8] = { 0U, 0U, 0U, 0U, 0U, 0U, 0U, 0x80000000U };
@@ -207,7 +213,7 @@ void test_add(TestObjs *objs) {
   result = uint256_add(objs->zero, objs->max);   // 0 + MAX
   ASSERT_SAME(objs->max, result);
 
-  result = uint256_add(objs->max, objs->one);    // MAX + 1 = 0
+  result = uint256_add(objs->max, objs->one);    // MAX + 1 = 0 (overflow)
   ASSERT_SAME(objs->zero, result);
 
   result = uint256_add(objs->one, objs->max);    // MAX + 1 = 0 (commutative overflow)
@@ -216,11 +222,8 @@ void test_add(TestObjs *objs) {
   result = uint256_add(objs->max, two);          // MAX + 2 = 1
   ASSERT_SAME(objs->one, result);
 
-  UInt256 one_below_max;
-  set_all(&one_below_max, 0xFFFFFFFFU);
-  one_below_max.data[0] = 0xFFFFFFFEU;
   result = uint256_add(objs->max, objs->max);    // MAX + MAX = MAX - 1
-  ASSERT_SAME(one_below_max, result);
+  ASSERT_SAME(objs->one_below_max, result);
 }
 
 void test_add_genfact() {          //used genfact addition fact
@@ -282,18 +285,61 @@ void test_add_genfact2() {
 
 }
 
-
 void test_sub(TestObjs *objs) {
   UInt256 result;
 
-  result = uint256_sub(objs->zero, objs->zero);
+  result = uint256_sub(objs->zero, objs->zero);   // 0 - 0
   ASSERT_SAME(objs->zero, result);
 
-  result = uint256_sub(objs->one, objs->one);
+  result = uint256_sub(objs->one, objs->zero);    // 1 - 0
+  ASSERT_SAME(objs->one, result);
+
+  result = uint256_sub(objs->one, objs->one);     // 1 - 1
   ASSERT_SAME(objs->zero, result);
 
-  result = uint256_sub(objs->zero, objs->one);
+  result = uint256_sub(objs->max, objs->zero);    // MAX - 0
   ASSERT_SAME(objs->max, result);
+
+  result = uint256_sub(objs->max, objs->one);     // MAX - 1
+  ASSERT_SAME(objs->one_below_max, result);
+
+  result = uint256_sub(objs->max, objs->max);     // MAX - MAX
+  ASSERT_SAME(objs->zero, result);
+
+  result = uint256_sub(objs->zero, objs->one);    // 0 - 1 (underflow)
+  ASSERT_SAME(objs->max, result);
+
+  result = uint256_sub(objs->zero, objs->max);    // 0 - MAX (underflow)
+  ASSERT_SAME(objs->one, result);
+}
+
+void test_subtract_genfact() {          //used genfact subtraction fact
+  UInt256 left, right, result;
+  left.data[0] = 0x7f3d84b6U;
+  left.data[1] = 0x84dd9c17U;
+  left.data[2] = 0x6fff7b15U;
+  left.data[3] = 0x31db746cU;
+  left.data[4] = 0x79e25608U;
+  left.data[5] = 0x8b63dbedU;
+  left.data[6] = 0x64816a25U;
+  left.data[7] = 0x089695f5U;
+  right.data[0] = 0xe5b85b3dU;
+  right.data[1] = 0xb5d9d04dU;
+  right.data[2] = 0xb56fbd77U;
+  right.data[3] = 0xd376c846U;
+  right.data[4] = 0x8ab7830dU;
+  right.data[5] = 0x819c4ceaU;
+  right.data[6] = 0xc5b28bf6U;
+  right.data[7] = 0x00bf0534U;
+  result = uint256_sub(left, right);
+  ASSERT(0x99852979U == result.data[0]);
+  ASSERT(0xcf03cbc9U == result.data[1]);
+  ASSERT(0xba8fbd9dU == result.data[2]);
+  ASSERT(0x5e64ac25U == result.data[3]);
+  ASSERT(0xef2ad2faU == result.data[4]);
+  ASSERT(0x09c78f02U == result.data[5]);
+  ASSERT(0x9ecede2fU == result.data[6]);
+  ASSERT(0x07d790c0U == result.data[7]);
 }
 
 void test_negate(TestObjs *objs) {
@@ -307,6 +353,15 @@ void test_negate(TestObjs *objs) {
 
   result = uint256_negate(objs->max);
   ASSERT_SAME(objs->one, result);
+
+  uint32_t two_data[8] = { 2U };
+  UInt256 two;
+  INIT_FROM_ARR(two, two_data);
+  result = uint256_negate(two);    
+  ASSERT_SAME(objs->one_below_max, result);
+
+  result = uint256_negate(objs->one_below_max);    
+  ASSERT_SAME(two, result);
 }
 
 void test_rotate_left(TestObjs *objs) {
