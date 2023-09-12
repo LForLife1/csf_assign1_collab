@@ -132,38 +132,17 @@ UInt256 uint256_rotate_left(UInt256 val, unsigned nbits) {
   int bitShift = nbits % 32;
 
   for (int u32 = 0; u32 < 8; u32++) {
+    // add 8 here so modulo doesn't deal with negatives
     int lookupU32 = (u32 - u32Shift + 8) % 8;
     int lookupU32Overflow = (lookupU32 - 1 + 8) % 8;
+
+    // take right side of lookup and place it to left side of destination
     uint32_t mask = 0xffffffff >> bitShift;
     result.data[u32] = (val.data[lookupU32] & mask) << bitShift;
+    // take left side of lookup-1 and place it to right side of destination
     result.data[u32] |= (val.data[lookupU32Overflow] & ~mask) >> (32 - bitShift);
   }
   return result;
-
-  /* I fooled around with this - lmk if you don't figure it out
-  //I have a friend who can help us if need be tonight
-    UInt256 result;
-  for (unsigned i = 0; i < 8; ++i) {
-    result.data[i] = 0U;
-  }
-  nbits = nbits % 256;
-  // int u32Shift = nbits / 32;
-  // int bitShift = nbits % 32;
-
-  for (int bit = 0; bit < 256; bit++) {
-    int desired = (bit - nbits) % 256;
-    int u32array = desired / 32;
-    int inArrayBin = desired % 32;
-    uint32_t bitMask = 0x00000001U << inArrayBin;
-    uint32_t isPresent = val.data[u32array] & bitMask;
-    if (isPresent != 0U) {
-      //result.data[(bit / 32)] &= ~bitMask;
-      result.data[(bit / 32)] = result.data[u32array] | (0x00000001U << bit);
-    }
-  }
-
-  return result;*/
-
 }
 
 // Return the result of rotating every bit in val nbits to
@@ -179,8 +158,11 @@ UInt256 uint256_rotate_right(UInt256 val, unsigned nbits) {
   for (int u32 = 0; u32 < 8; u32++) {
     int lookupU32 = (u32 + u32Shift) % 8;
     int lookupU32Overflow = (lookupU32 + 1) % 8;
+
+    // take left side of lookup and place on right side of destination
     uint32_t mask = 0xffffffff << bitShift;
     result.data[u32] = (val.data[lookupU32] & mask) >> bitShift;
+    // take right side of lookup+1 and place on left side of destination
     result.data[u32] |= (val.data[lookupU32Overflow] & ~mask) << (32 - bitShift);
   }
   return result;
