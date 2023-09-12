@@ -46,9 +46,11 @@ void test_create_from_hex(TestObjs *objs);
 void test_format_as_hex(TestObjs *objs);
 void test_add(TestObjs *objs);
 void test_add_genfact();
-void test_add_genfact2();
+void test_add_genfact_overflow();
+void test_add_zero();
 void test_sub(TestObjs *objs);
-void test_subtract_genfact();
+void test_subtract_genfact_overflow();
+void test_subtract_zero();
 void test_negate(TestObjs *objs);
 void test_rotate_left(TestObjs *objs);
 void test_rotate_right(TestObjs *objs);
@@ -67,9 +69,11 @@ int main(int argc, char **argv) {
   TEST(test_format_as_hex);
   TEST(test_add);
   TEST(test_add_genfact);
-  TEST(test_add_genfact2);
+  TEST(test_add_genfact_overflow);
+  TEST(test_add_zero);
   TEST(test_sub);
-  TEST(test_subtract_genfact);
+  TEST(test_subtract_genfact_overflow);
+  TEST(test_subtract_zero);
   TEST(test_negate);
   TEST(test_rotate_left);
   TEST(test_rotate_right);
@@ -266,7 +270,7 @@ void test_add_genfact() {          //used genfact addition fact
   ASSERT(0x111bc596U == result.data[7]);
 }
 
-void test_add_genfact2() {
+void test_add_genfact_overflow() {
   UInt256 left, right, result;
   left.data[0] = 0xbd3f2275U;
   left.data[1] = 0xdaade3feU;
@@ -294,6 +298,28 @@ void test_add_genfact2() {
   ASSERT(0x54708b7cU == result.data[6]);
   ASSERT(0xea137879U == result.data[7]);
 
+}
+
+void test_add_zero() {
+  UInt256 left, right, result;
+  left.data[0] = 0xbd3f2275U;
+  left.data[1] = 0xdaade3feU;
+  left.data[2] = 0x8f8991d5U;
+  left.data[3] = 0x4b5feaa9U;
+  left.data[4] = 0x19448805U;
+  left.data[5] = 0x525c1526U;
+  left.data[6] = 0x4719744bU;
+  left.data[7] = 0x50a3b0bcU;
+  right.data[0] = 0x00000000U;
+  right.data[1] = 0x00000000U;
+  right.data[2] = 0x00000000U;
+  right.data[3] = 0x00000000U;
+  right.data[4] = 0x00000000U;
+  right.data[5] = 0x00000000U;
+  right.data[6] = 0x00000000U;
+  right.data[7] = 0x00000000U;
+  result = uint256_add(left, right);
+  ASSERT_SAME(left, result); // left should be unchanged
 }
 
 void test_sub(TestObjs *objs) {
@@ -324,7 +350,7 @@ void test_sub(TestObjs *objs) {
   ASSERT_SAME(objs->one, result);
 }
 
-void test_subtract_genfact() {          //used genfact subtraction fact
+void test_subtract_genfact_overflow() {          //used genfact subtraction fact
   UInt256 left, right, result;
   left.data[0] = 0x7f3d84b6U;
   left.data[1] = 0x84dd9c17U;
@@ -351,6 +377,28 @@ void test_subtract_genfact() {          //used genfact subtraction fact
   ASSERT(0x09c78f02U == result.data[5]);
   ASSERT(0x9ecede2fU == result.data[6]);
   ASSERT(0x07d790c0U == result.data[7]);
+}
+
+void test_subtract_zero() {
+  UInt256 left, right, result;
+  left.data[0] = 0xbd3f2275U;
+  left.data[1] = 0xdaade3feU;
+  left.data[2] = 0x8f8991d5U;
+  left.data[3] = 0x4b5feaa9U;
+  left.data[4] = 0x19448805U;
+  left.data[5] = 0x525c1526U;
+  left.data[6] = 0x4719744bU;
+  left.data[7] = 0x50a3b0bcU;
+  right.data[0] = 0x00000000U;
+  right.data[1] = 0x00000000U;
+  right.data[2] = 0x00000000U;
+  right.data[3] = 0x00000000U;
+  right.data[4] = 0x00000000U;
+  right.data[5] = 0x00000000U;
+  right.data[6] = 0x00000000U;
+  right.data[7] = 0x00000000U;
+  result = uint256_sub(left, right);
+  ASSERT_SAME(left, result);
 }
 
 void test_negate(TestObjs *objs) {
