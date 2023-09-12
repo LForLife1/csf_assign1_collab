@@ -40,9 +40,9 @@ UInt256 uint256_create_from_hex(const char *hex) {
   // scan 64 characters max (or until reaches start of string)
   char *buffer = malloc(sizeof(char) * 9);
   for (int i = 0; i < 8; i++) {
-    strcpy(buffer, "xxxxxxxx"); // reset to invalid hex characters
+    strcpy(buffer, "00000000"); // clean buffer
     for (int j = 0; j < 8 && currentHex != hex-1; j++, currentHex--) {
-      buffer[j] = *currentHex;
+      buffer[7-j] = *currentHex;
     }
 
     result.data[i] = strtoul(buffer, NULL, 16);

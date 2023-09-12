@@ -186,9 +186,12 @@ void test_create_from_hex(TestObjs *objs) {
   UInt256 max = uint256_create_from_hex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
   ASSERT_SAME(objs->max, max);
 
+  UInt256 leadingZeros = uint256_create_from_hex("0000000000000000000000000000000000000000000000000000000000000001");
+  ASSERT_SAME(objs->one, leadingZeros);
+
   // string is >64 characters, so it takes the rightmost 64
-  UInt256 too_large = uint256_create_from_hex("aaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-  ASSERT_SAME(objs->max, too_large);
+  UInt256 tooLarge = uint256_create_from_hex("aaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+  ASSERT_SAME(objs->max, tooLarge);
 
   UInt256 wild = uint256_create_from_hex("cd000000000000000000000000000000000000000000000000000000000000ab");
   ASSERT_SAME(objs->wild, wild);
