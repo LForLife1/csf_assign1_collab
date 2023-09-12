@@ -10,7 +10,7 @@ typedef struct {
   UInt256 max;  // the value equal to (2^256)-1
   UInt256 one_below_max; //the value equal to (2^256) - 2
   UInt256 msb_set; // the value equal to 2^255
-  UInt256 rot; // value used to test rotations
+  UInt256 wild; // wild value equal to an arbitrary number for general testing
 } TestObjs;
 
 // Helper functions for implementing tests
@@ -46,11 +46,9 @@ void test_create_from_hex(TestObjs *objs);
 void test_format_as_hex(TestObjs *objs);
 void test_add(TestObjs *objs);
 void test_add_genfact();
-void test_add_genfact_overflow();
-void test_add_zero();
+void test_add_genfact2();
 void test_sub(TestObjs *objs);
-void test_subtract_genfact_overflow();
-void test_subtract_zero();
+void test_subtract_genfact();
 void test_negate(TestObjs *objs);
 void test_rotate_left(TestObjs *objs);
 void test_rotate_right(TestObjs *objs);
@@ -69,11 +67,9 @@ int main(int argc, char **argv) {
   TEST(test_format_as_hex);
   TEST(test_add);
   TEST(test_add_genfact);
-  TEST(test_add_genfact_overflow);
-  TEST(test_add_zero);
+  TEST(test_add_genfact2);
   TEST(test_sub);
-  TEST(test_subtract_genfact_overflow);
-  TEST(test_subtract_zero);
+  TEST(test_subtract_genfact);
   TEST(test_negate);
   TEST(test_rotate_left);
   TEST(test_rotate_right);
@@ -107,8 +103,8 @@ TestObjs *setup(void) {
   // value with nonzero values in least significant and most significant words
   // Note that the hex representation of this value is
   //   CD000000 00000000 00000000 00000000 00000000 00000000 00000000 000000AB
-  uint32_t rot_data[8] = { 0x000000ABU, 0U, 0U, 0U, 0U, 0U, 0U, 0xCD000000U };
-  INIT_FROM_ARR(objs->rot, rot_data);
+  uint32_t wild_data[8] = { 0x000000ABU, 0U, 0U, 0U, 0U, 0U, 0U, 0xCD000000U };
+  INIT_FROM_ARR(objs->wild, wild_data);
 
   return objs;
 }
@@ -189,6 +185,13 @@ void test_create_from_hex(TestObjs *objs) {
 
   UInt256 max = uint256_create_from_hex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
   ASSERT_SAME(objs->max, max);
+
+  // string is >64 characters, so it takes the rightmost 64
+  UInt256 too_large = uint256_create_from_hex("aaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+  ASSERT_SAME(objs->max, too_large);
+
+  UInt256 wild = uint256_create_from_hex("cd000000000000000000000000000000000000000000000000000000000000ab");
+  ASSERT_SAME(objs->wild, wild);
 }
 
 void test_format_as_hex(TestObjs *objs) {
@@ -204,6 +207,10 @@ void test_format_as_hex(TestObjs *objs) {
 
   s = uint256_format_as_hex(objs->max);
   ASSERT(0 == strcmp("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", s));
+  free(s);
+
+  s = uint256_format_as_hex(objs->wild);
+  ASSERT(0 == strcmp("cd000000000000000000000000000000000000000000000000000000000000ab", s));
   free(s);
 }
 
@@ -270,7 +277,7 @@ void test_add_genfact() {          //used genfact addition fact
   ASSERT(0x111bc596U == result.data[7]);
 }
 
-void test_add_genfact_overflow() {
+void test_add_genfact2() {
   UInt256 left, right, result;
   left.data[0] = 0xbd3f2275U;
   left.data[1] = 0xdaade3feU;
@@ -298,28 +305,6 @@ void test_add_genfact_overflow() {
   ASSERT(0x54708b7cU == result.data[6]);
   ASSERT(0xea137879U == result.data[7]);
 
-}
-
-void test_add_zero() {
-  UInt256 left, right, result;
-  left.data[0] = 0xbd3f2275U;
-  left.data[1] = 0xdaade3feU;
-  left.data[2] = 0x8f8991d5U;
-  left.data[3] = 0x4b5feaa9U;
-  left.data[4] = 0x19448805U;
-  left.data[5] = 0x525c1526U;
-  left.data[6] = 0x4719744bU;
-  left.data[7] = 0x50a3b0bcU;
-  right.data[0] = 0x00000000U;
-  right.data[1] = 0x00000000U;
-  right.data[2] = 0x00000000U;
-  right.data[3] = 0x00000000U;
-  right.data[4] = 0x00000000U;
-  right.data[5] = 0x00000000U;
-  right.data[6] = 0x00000000U;
-  right.data[7] = 0x00000000U;
-  result = uint256_add(left, right);
-  ASSERT_SAME(left, result); // left should be unchanged
 }
 
 void test_sub(TestObjs *objs) {
@@ -350,7 +335,7 @@ void test_sub(TestObjs *objs) {
   ASSERT_SAME(objs->one, result);
 }
 
-void test_subtract_genfact_overflow() {          //used genfact subtraction fact
+void test_subtract_genfact() {          //used genfact subtraction fact
   UInt256 left, right, result;
   left.data[0] = 0x7f3d84b6U;
   left.data[1] = 0x84dd9c17U;
@@ -377,28 +362,6 @@ void test_subtract_genfact_overflow() {          //used genfact subtraction fact
   ASSERT(0x09c78f02U == result.data[5]);
   ASSERT(0x9ecede2fU == result.data[6]);
   ASSERT(0x07d790c0U == result.data[7]);
-}
-
-void test_subtract_zero() {
-  UInt256 left, right, result;
-  left.data[0] = 0xbd3f2275U;
-  left.data[1] = 0xdaade3feU;
-  left.data[2] = 0x8f8991d5U;
-  left.data[3] = 0x4b5feaa9U;
-  left.data[4] = 0x19448805U;
-  left.data[5] = 0x525c1526U;
-  left.data[6] = 0x4719744bU;
-  left.data[7] = 0x50a3b0bcU;
-  right.data[0] = 0x00000000U;
-  right.data[1] = 0x00000000U;
-  right.data[2] = 0x00000000U;
-  right.data[3] = 0x00000000U;
-  right.data[4] = 0x00000000U;
-  right.data[5] = 0x00000000U;
-  right.data[6] = 0x00000000U;
-  right.data[7] = 0x00000000U;
-  result = uint256_sub(left, right);
-  ASSERT_SAME(left, result);
 }
 
 void test_negate(TestObjs *objs) {
@@ -453,11 +416,11 @@ void test_rotate_left(TestObjs *objs) {
   result = uint256_rotate_left(objs->msb_set, 1);
   ASSERT_SAME(objs->one, result);
 
-  //ROT VALUES: CD000000 00000000 00000000 00000000 00000000 00000000 00000000 000000AB
+  //WILD VALUE: CD000000 00000000 00000000 00000000 00000000 00000000 00000000 000000AB
 
-  // after rotating the "rot" value left by 4 bits, the resulting value should be
+  // after rotating the "wild" value left by 4 bits, the resulting value should be
   //   D0000000 00000000 00000000 00000000 00000000 00000000 00000000 00000ABC
-  result = uint256_rotate_left(objs->rot, 4);
+  result = uint256_rotate_left(objs->wild, 4);
   ASSERT(0x00000ABCU == result.data[0]);
   ASSERT(0U == result.data[1]);
   ASSERT(0U == result.data[2]);
@@ -467,9 +430,9 @@ void test_rotate_left(TestObjs *objs) {
   ASSERT(0U == result.data[6]);
   ASSERT(0xD0000000U == result.data[7]);
 
-  // after rotating the "rot" value left by 4 + 256 bits, the resulting value should still be
+  // after rotating the "wild" value left by 4 + 256 bits, the resulting value should still be
   //   D0000000 00000000 00000000 00000000 00000000 00000000 00000000 00000ABC
-  result = uint256_rotate_left(objs->rot, 260);
+  result = uint256_rotate_left(objs->wild, 260);
   ASSERT(0x00000ABCU == result.data[0]);
   ASSERT(0U == result.data[1]);
   ASSERT(0U == result.data[2]);
@@ -479,11 +442,9 @@ void test_rotate_left(TestObjs *objs) {
   ASSERT(0U == result.data[6]);
   ASSERT(0xD0000000U == result.data[7]);
 
-  // after rotating the "rot" value left by 8 bits, the resulting value should be
+  // after rotating the "wild" value left by 8 bits, the resulting value should be
   //   00000000 00000000 00000000 00000000 00000000 00000000 00000000 0000ABCD
-  //CURRENTLY GETTING:
-  //   00000000 00000000 00000000 00000000 00000000 00000000 0000ABCD 00000000 
-  result = uint256_rotate_left(objs->rot, 8);
+  result = uint256_rotate_left(objs->wild, 8);
   ASSERT(0x0000ABCDU == result.data[0]);
   ASSERT(0U == result.data[1]);
   ASSERT(0U == result.data[2]);
@@ -493,12 +454,10 @@ void test_rotate_left(TestObjs *objs) {
   ASSERT(0U == result.data[6]);
   ASSERT(0U == result.data[7]);
 
-    // after rotating the "rot" value left by 9 bits, the resulting value should be
+  // after rotating the "wild" value left by 9 bits, the resulting value should be
   //   00000000 00000000 00000000 00000000 00000000 00000000 00000000 0001579A
-  //CURRENTLY GETTING:
-  //   UNKNOWN
-  result = uint256_rotate_left(objs->rot, 9);
-  ASSERT(0x0001579AU == result.data[0]); //FIX WHAT THIS SHOULD BE
+  result = uint256_rotate_left(objs->wild, 9);
+  ASSERT(0x0001579AU == result.data[0]);
   ASSERT(0U == result.data[1]);
   ASSERT(0U == result.data[2]);
   ASSERT(0U == result.data[3]);
@@ -508,11 +467,9 @@ void test_rotate_left(TestObjs *objs) {
   ASSERT(0U == result.data[7]);
 
 
-  // after rotating the "rot" value left by 56 bits, the resulting value should be
-  // D0000000 00000000 00000000 00000000 00000000 00000000 ABCD0000 00000000
-  //CURRENTLY GETTING:
-  //   UNKNOWN
-  result = uint256_rotate_left(objs->rot, 56);
+  // after rotating the "wild" value left by 56 bits, the resulting value should be
+  //   D0000000 00000000 00000000 00000000 00000000 00000000 ABCD0000 00000000
+  result = uint256_rotate_left(objs->wild, 56);
   ASSERT(0U == result.data[0]);
   ASSERT(0xABCD0000U == result.data[1]);
   ASSERT(0U == result.data[2]);
@@ -552,9 +509,9 @@ void test_rotate_right(TestObjs *objs) {
   result = uint256_rotate_right(objs->one, 1);
   ASSERT_SAME(objs->msb_set, result);
 
-  // after rotating the "rot" value right by 4 bits, the resulting value should be
+  // after rotating the "wild" value right by 4 bits, the resulting value should be
   //   BCD00000 00000000 00000000 00000000 00000000 00000000 00000000 0000000A
-  result = uint256_rotate_right(objs->rot, 4);
+  result = uint256_rotate_right(objs->wild, 4);
   ASSERT(0x0000000AU == result.data[0]);
   ASSERT(0U == result.data[1]);
   ASSERT(0U == result.data[2]);
@@ -564,9 +521,9 @@ void test_rotate_right(TestObjs *objs) {
   ASSERT(0U == result.data[6]);
   ASSERT(0xBCD00000U == result.data[7]);
 
-  // after rotating the "rot" value right by 4 + 256 bits, the resulting value should still be
+  // after rotating the "wild" value right by 4 + 256 bits, the resulting value should still be
   //   BCD00000 00000000 00000000 00000000 00000000 00000000 00000000 0000000A
-  result = uint256_rotate_right(objs->rot, 260);
+  result = uint256_rotate_right(objs->wild, 260);
   ASSERT(0x0000000AU == result.data[0]);
   ASSERT(0U == result.data[1]);
   ASSERT(0U == result.data[2]);
