@@ -378,11 +378,34 @@ void test_negate(TestObjs *objs) {
 void test_rotate_left(TestObjs *objs) {
   UInt256 result;
 
+  result = uint256_rotate_left(objs->zero, 0);  //check not rotating on zero changes nothing
+  ASSERT_SAME(objs->zero, result);
+
+  result = uint256_rotate_left(objs->zero, 8);  //check rotation zero changes nothing
+  ASSERT_SAME(objs->zero, result);
+
+  result = uint256_rotate_left(objs->max, 0);  //check no rotation max changes nothing
+  ASSERT_SAME(objs->max, result);
+
+  result = uint256_rotate_left(objs->max, 8);  //check rotation max changes nothing
+  ASSERT_SAME(objs->max, result);
+
+  result = uint256_rotate_left(objs->one, 0);  //check not rotating on non-zero changes nothing
+  ASSERT_SAME(objs->one, result);
+
+  result = uint256_rotate_left(objs->zero, 256);  //check rotation by 256 changes nothing
+  ASSERT_SAME(objs->zero, result);
+
+  result = uint256_rotate_left(objs->max, 256);  
+  ASSERT_SAME(objs->max, result);
+
   // rotating the value with just the most significant bit set
   // one position to the left should result in the value equal to 1
   // (i.e., the value with only the least significant bit set)
   result = uint256_rotate_left(objs->msb_set, 1);
   ASSERT_SAME(objs->one, result);
+
+  //ROT VALUES: CD000000 00000000 00000000 00000000 00000000 00000000 00000000 000000AB
 
   // after rotating the "rot" value left by 4 bits, the resulting value should be
   //   D0000000 00000000 00000000 00000000 00000000 00000000 00000000 00000ABC
@@ -395,10 +418,86 @@ void test_rotate_left(TestObjs *objs) {
   ASSERT(0U == result.data[5]);
   ASSERT(0U == result.data[6]);
   ASSERT(0xD0000000U == result.data[7]);
+
+  // after rotating the "rot" value left by 4 + 256 bits, the resulting value should still be
+  //   D0000000 00000000 00000000 00000000 00000000 00000000 00000000 00000ABC
+  result = uint256_rotate_left(objs->rot, 260);
+  ASSERT(0x00000ABCU == result.data[0]);
+  ASSERT(0U == result.data[1]);
+  ASSERT(0U == result.data[2]);
+  ASSERT(0U == result.data[3]);
+  ASSERT(0U == result.data[4]);
+  ASSERT(0U == result.data[5]);
+  ASSERT(0U == result.data[6]);
+  ASSERT(0xD0000000U == result.data[7]);
+
+  // after rotating the "rot" value left by 8 bits, the resulting value should be
+  //   00000000 00000000 00000000 00000000 00000000 00000000 00000000 0000ABCD
+  //CURRENTLY GETTING:
+  //   00000000 00000000 00000000 00000000 00000000 00000000 0000ABCD 00000000 
+  result = uint256_rotate_left(objs->rot, 8);
+  ASSERT(0x0000ABCDU == result.data[0]);
+  ASSERT(0U == result.data[1]);
+  ASSERT(0U == result.data[2]);
+  ASSERT(0U == result.data[3]);
+  ASSERT(0U == result.data[4]);
+  ASSERT(0U == result.data[5]);
+  ASSERT(0U == result.data[6]);
+  ASSERT(0U == result.data[7]);
+
+    // after rotating the "rot" value left by 9 bits, the resulting value should be
+  //   00000000 00000000 00000000 00000000 00000000 00000000 00000000 0001579A
+  //CURRENTLY GETTING:
+  //   UNKNOWN
+  result = uint256_rotate_left(objs->rot, 9);
+  ASSERT(0x0001579AU == result.data[0]); //FIX WHAT THIS SHOULD BE
+  ASSERT(0U == result.data[1]);
+  ASSERT(0U == result.data[2]);
+  ASSERT(0U == result.data[3]);
+  ASSERT(0U == result.data[4]);
+  ASSERT(0U == result.data[5]);
+  ASSERT(0U == result.data[6]);
+  ASSERT(0U == result.data[7]);
+
+
+  // after rotating the "rot" value left by 56 bits, the resulting value should be
+  // D0000000 00000000 00000000 00000000 00000000 00000000 ABCD0000 00000000
+  //CURRENTLY GETTING:
+  //   UNKNOWN
+  result = uint256_rotate_left(objs->rot, 56);
+  ASSERT(0U == result.data[0]);
+  ASSERT(0xABCD0000U == result.data[1]);
+  ASSERT(0U == result.data[2]);
+  ASSERT(0U == result.data[3]);
+  ASSERT(0U == result.data[4]);
+  ASSERT(0U == result.data[5]);
+  ASSERT(0U == result.data[6]);
+  ASSERT(0U == result.data[7]);
 }
 
 void test_rotate_right(TestObjs *objs) {
   UInt256 result;
+
+  result = uint256_rotate_right(objs->zero, 0);  //check not rotating on zero changes nothing
+  ASSERT_SAME(objs->zero, result);
+
+  result = uint256_rotate_right(objs->zero, 8);  //check rotation zero changes nothing
+  ASSERT_SAME(objs->zero, result);
+
+  result = uint256_rotate_right(objs->max, 0);  //check no rotation max changes nothing
+  ASSERT_SAME(objs->max, result);
+
+  result = uint256_rotate_right(objs->max, 8);  //check rotation max changes nothing
+  ASSERT_SAME(objs->max, result);
+
+  result = uint256_rotate_right(objs->one, 0);  //check not rotating on non-zero changes nothing
+  ASSERT_SAME(objs->one, result);
+
+  result = uint256_rotate_right(objs->zero, 256);  //check rotation by 256 changes nothing
+  ASSERT_SAME(objs->zero, result);
+
+  result = uint256_rotate_right(objs->max, 256);  
+  ASSERT_SAME(objs->max, result);
 
   // rotating 1 right by 1 position should result in a value with just
   // the most-significant bit set
@@ -408,6 +507,18 @@ void test_rotate_right(TestObjs *objs) {
   // after rotating the "rot" value right by 4 bits, the resulting value should be
   //   BCD00000 00000000 00000000 00000000 00000000 00000000 00000000 0000000A
   result = uint256_rotate_right(objs->rot, 4);
+  ASSERT(0x0000000AU == result.data[0]);
+  ASSERT(0U == result.data[1]);
+  ASSERT(0U == result.data[2]);
+  ASSERT(0U == result.data[3]);
+  ASSERT(0U == result.data[4]);
+  ASSERT(0U == result.data[5]);
+  ASSERT(0U == result.data[6]);
+  ASSERT(0xBCD00000U == result.data[7]);
+
+  // after rotating the "rot" value right by 4 + 256 bits, the resulting value should still be
+  //   BCD00000 00000000 00000000 00000000 00000000 00000000 00000000 0000000A
+  result = uint256_rotate_right(objs->rot, 260);
   ASSERT(0x0000000AU == result.data[0]);
   ASSERT(0U == result.data[1]);
   ASSERT(0U == result.data[2]);
