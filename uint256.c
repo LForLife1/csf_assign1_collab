@@ -132,8 +132,8 @@ UInt256 uint256_rotate_left(UInt256 val, unsigned nbits) {
   int bitShift = nbits % 32;
 
   for (int u32 = 0; u32 < 8; u32++) {
-    int lookupU32 = (u32 - u32Shift) % 8;
-    int lookupU32Overflow = (lookupU32 - 1) % 8;
+    int lookupU32 = (u32 - u32Shift + 8) % 8;
+    int lookupU32Overflow = (lookupU32 - 1 + 8) % 8;
     uint32_t mask = 0xffffffff >> bitShift;
     result.data[u32] = (val.data[lookupU32] & mask) << bitShift;
     result.data[u32] |= (val.data[lookupU32Overflow] & ~mask) >> (32 - bitShift);
@@ -150,7 +150,7 @@ UInt256 uint256_rotate_left(UInt256 val, unsigned nbits) {
   // int u32Shift = nbits / 32;
   // int bitShift = nbits % 32;
 
-    for (int bit = 0; bit < 256; bit++) {
+  for (int bit = 0; bit < 256; bit++) {
     int desired = (bit - nbits) % 256;
     int u32array = desired / 32;
     int inArrayBin = desired % 32;
@@ -171,9 +171,11 @@ UInt256 uint256_rotate_left(UInt256 val, unsigned nbits) {
 // should be shifted back into the most significant bits.
 UInt256 uint256_rotate_right(UInt256 val, unsigned nbits) {
   UInt256 result;
+  
   nbits = nbits % 256;
-  int u32Shift = nbits / 8;
+  int u32Shift = nbits / 32;
   int bitShift = nbits % 32;
+
   for (int u32 = 0; u32 < 8; u32++) {
     int lookupU32 = (u32 + u32Shift) % 8;
     int lookupU32Overflow = (lookupU32 + 1) % 8;
