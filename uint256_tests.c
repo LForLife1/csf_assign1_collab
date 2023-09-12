@@ -535,4 +535,40 @@ void test_rotate_right(TestObjs *objs) {
   ASSERT(0U == result.data[5]);
   ASSERT(0U == result.data[6]);
   ASSERT(0xBCD00000U == result.data[7]);
+
+  // after rotating the "wild" value right by 8 bits, the resulting value should be
+  //   ABCD0000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  result = uint256_rotate_right(objs->wild, 8);
+  ASSERT(0U == result.data[0]);
+  ASSERT(0U == result.data[1]);
+  ASSERT(0U == result.data[2]);
+  ASSERT(0U == result.data[3]);
+  ASSERT(0U == result.data[4]);
+  ASSERT(0U == result.data[5]);
+  ASSERT(0U == result.data[6]);
+  ASSERT(0xABCD0000U == result.data[7]);
+
+  // after rotating the "wild" value right by 9 bits, the resulting value should be
+  //   ABCD0000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  result = uint256_rotate_right(objs->wild, 9);
+  ASSERT(0U == result.data[0]);
+  ASSERT(0U == result.data[1]);
+  ASSERT(0U == result.data[2]);
+  ASSERT(0U == result.data[3]);
+  ASSERT(0U == result.data[4]);
+  ASSERT(0U == result.data[5]);
+  ASSERT(0U == result.data[6]);
+  ASSERT(0x55E68000U == result.data[7]);
+
+  // after rotating the "wild" value right by 56 bits, the resulting value should be
+  //   ABCD0000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  result = uint256_rotate_right(objs->wild, 56);
+  ASSERT(0U == result.data[0]);
+  ASSERT(0U == result.data[1]);
+  ASSERT(0U == result.data[2]);
+  ASSERT(0U == result.data[3]);
+  ASSERT(0U == result.data[4]);
+  ASSERT(0U == result.data[5]);
+  ASSERT(0x0000ABCDU == result.data[6]);
+  ASSERT(0U == result.data[7]);
 }
